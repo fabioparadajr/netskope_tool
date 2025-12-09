@@ -1,9 +1,6 @@
-
-use calamine::{
-    RangeDeserializerBuilder, Reader,
-    open_workbook_auto,
-};
-use serde::{Deserialize};
+use crate::publisher::build_publisher_map;
+use calamine::{RangeDeserializerBuilder, Reader, open_workbook_auto};
+use serde::Deserialize;
 use serde_json::json;
 use std::error::Error;
 
@@ -13,7 +10,6 @@ pub struct PrivateApp {
     pub host: String,
     pub port: String,
     pub protocol: String,
-    pub publisher_id: String,
     pub publisher_name: String,
     pub tags: String,
     pub use_publisher_dns: bool,
@@ -22,8 +18,6 @@ pub struct PrivateApp {
 }
 
 pub fn create_privateapp(tenant: &str, token: &str, path: &str) -> Result<(), Box<dyn Error>> {
-    //let path = "/home/fabio/RustroverProjects/netskope_tool/target/debug/applications.xlsx";
-
     // Já trata o erro aqui em vez de usar unwrap()
     let mut workbook = open_workbook_auto(path)?;
 
@@ -36,23 +30,27 @@ pub fn create_privateapp(tenant: &str, token: &str, path: &str) -> Result<(), Bo
 
     let client = reqwest::blocking::Client::new();
 
-    // Cria o iterador de linhas -> PrivateApp
     let iter = RangeDeserializerBuilder::new()
         .has_headers(true)
         .from_range::<_, PrivateApp>(&range)?;
 
-    // AGORA vem o loop: um request por linha válida
+    println!("Loading Publishers ID's");
+    let publisher_map = build_publisher_map(tenant, token).expect("Failed to build publisher map");
+
     for result in iter {
         let row: PrivateApp = match result {
             Ok(row) => row,
             Err(e) => {
-                eprintln!("Erro ao desserializar linha da planilha: {e}");
-                // aqui você decide: pula a linha com erro e continua
+                eprintln!("Error deserialize: {e}");
+
                 continue;
             }
         };
+        let publisher_id = publisher_map
+            .get(&row.publisher_name)
+            .expect("Failed to get publisher_id");
+
         if row.clientless_access == true {
-            // request modo clientless(browser)
             let body = json!({
                 "app_name": row.app_name,
                 "host": row.host,
@@ -66,7 +64,7 @@ pub fn create_privateapp(tenant: &str, token: &str, path: &str) -> Result<(), Bo
                 ],
                 "publishers": [
                     {
-                        "publisher_id": row.publisher_id,
+                        "publisher_id": publisher_id,
                         "publisher_name": row.publisher_name
                     }
                 ],
@@ -85,10 +83,10 @@ pub fn create_privateapp(tenant: &str, token: &str, path: &str) -> Result<(), Bo
                 .json(&body)
                 .send()
             {
-                eprintln!("Erro ao enviar request: {e}");
+                eprintln!("Err send request: {e}");
             }
         } else {
-            // request modo client
+            // request client
             let body = json!({
                 "app_name": row.app_name,
                 "host": row.host,
@@ -100,7 +98,7 @@ pub fn create_privateapp(tenant: &str, token: &str, path: &str) -> Result<(), Bo
                 ],
                 "publishers": [
                     {
-                        "publisher_id": row.publisher_id,
+                        "publisher_id": publisher_id,
                         "publisher_name": row.publisher_name
                     }
                 ],
@@ -120,7 +118,7 @@ pub fn create_privateapp(tenant: &str, token: &str, path: &str) -> Result<(), Bo
                 .json(&body)
                 .send()
             {
-                eprintln!("Erro ao enviar request: {e}");
+                eprintln!("Err send request: {e}");
             }
         }
     }
