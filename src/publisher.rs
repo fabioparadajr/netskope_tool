@@ -1,7 +1,8 @@
 use crate::builder::Publisher;
 use crate::builder::build_name_id_map;
 use std::collections::HashMap;
-
+use serde::Deserialize;
+use std::error::Error;
 #[derive(Debug, Deserialize)]
 struct PublishersResponse {
     data: PublishersData,
@@ -12,9 +13,6 @@ struct PublishersData {
     publishers: Vec<Publisher>,
 }
 
-
-use serde::Deserialize;
-use std::error::Error;
 
 pub fn build_publisher_map(
     tenant: &str,

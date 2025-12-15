@@ -1,6 +1,6 @@
 use std::collections::HashMap;
-
 use serde::Deserialize;
+use crate::private_app::PrivateAppId;
 
 #[derive(Debug, Deserialize)]
 pub struct Publisher {
@@ -20,6 +20,15 @@ impl NamedResource for Publisher {
 
     fn name(&self) -> &str {
         &self.publisher_name
+    }
+}
+impl NamedResource for PrivateAppId {
+    fn id(&self) -> i64 {
+        self.app_id
+    }
+
+    fn name(&self) -> &str {
+        &self.app_name
     }
 }
 

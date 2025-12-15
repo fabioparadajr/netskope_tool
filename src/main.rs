@@ -2,13 +2,13 @@ pub mod builder;
 pub mod private_app;
 pub mod publisher;
 
-use calamine::Reader;
-use std::error::Error;
+
 use std::io;
 use std::io::Write;
 
 fn main() {
     println!("1) Create private app");
+    println!("2) Update private app");
     print!("Choose an option: ");
 
     io::stdout().flush().unwrap();
@@ -32,7 +32,11 @@ fn main() {
             private_app::create_privateapp(&tenant, &token, &path)
                 .expect("Error creating private app");
         }
-
+        2 => {
+            let (tenant, token, path) = ask_infos();
+            private_app::update_privateapp(&tenant, &token, &path)
+                .expect("Error update private app");
+        }
         _ => {
             println!("Invalid option");
         }
