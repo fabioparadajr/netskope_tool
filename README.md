@@ -5,6 +5,7 @@ Command-line tool written in Rust to automate common tasks against a Netskope te
 Current main goals:
 
 - Create **Private Apps** in bulk from an Excel spreadsheet.
+- Update **Private Apps** in bulk from an Excel spreadsheet.
 
 > ⚠️ This is a personal/lab project. It is **not** an official Netskope tool.
 
@@ -17,7 +18,11 @@ Current main goals:
 - For each row in the **`Applications`** sheet, it builds the JSON body required by Netskope’s Private Apps API.
 - Sends a `POST` request to create each Private App.
 
+### 1. Update Private Apps from Excel
 
+- Reads an `applications.xlsx` spreadsheet from the project directory.
+- For each row in the **`Applications`** sheet, it builds the JSON body required by Netskope’s Private Apps API.
+- Sends a `PATCH` request to create each Private App.
   
 ## Prerequisites 
 
